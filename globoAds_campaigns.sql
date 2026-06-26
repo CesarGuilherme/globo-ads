@@ -4,14 +4,17 @@
 -- Source: POST /api/v1/digital/items (Globo Ads "Resultados" API), SECOM account.
 -- Loader: globo-ads/extract.py (run from n8n: Schedule -> Execute Command).
 --
--- Append-only model: /digital/items has NO unique dimensional grain (rows can match
--- on every visible field yet differ only in a hidden impression segment, ~2% are
--- byte-identical), so we do NOT upsert. Each run appends a verbatim snapshot tagged
--- with run_id + extracted_at; downstream reads MAX(run_id). This is a deliberate
--- divergence from the house "INSERT ... ON DUPLICATE KEY UPDATE" rule — there is no
--- natural key to dedupe on. Field names preserved from the API (incl. the codCampaing
--- typo). Money is DECIMAL(14,2); seconds is a VARCHAR ("Outros"); video_vtr is a
--- small-integer count, not a rate.
+-- Date-partition replace model: /digital/items has NO row-level key (rows can match on
+-- every visible field yet differ only in a hidden impression segment, ~2% are
+-- byte-identical), so we can't upsert per row. But `date` is a clean partition: each
+-- load does DELETE WHERE date BETWEEN start AND end, then INSERT, in one transaction.
+-- This prevents cross-run duplication (retries, overlapping windows, Globo restatements
+-- all replace a day instead of stacking it). The table is queried directly — every date
+-- present once; run_id/extracted_at are provenance and globoAds_runs is the audit ledger.
+-- A no-arg extract.py run gap-fills MAX(date)+1 .. yesterday (America/Sao_Paulo).
+-- (Deliberate divergence from the house "INSERT ... ON DUPLICATE KEY UPDATE" rule — there
+-- is no natural row key.) Field names preserved from the API (incl. the codCampaing typo).
+-- Money is DECIMAL(14,2); seconds is a VARCHAR ("Outros"); video_vtr is a count, not a rate.
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS airbyte_secom.globoAds_campaigns (
