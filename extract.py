@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """Extract /digital/items into the shared MySQL warehouse (airbyte_secom).
 
-Designed to run from n8n: Schedule -> Execute Command -> `python3 extract.py [start] [end]`.
+Designed to run from n8n: Schedule (00:00 America/Sao_Paulo) -> Execute Command ->
+`python3 extract.py`  (no args = pull yesterday; pass `<start> <end>` to backfill a range).
 
-Append-only model (Phase 0 proved /digital/items has NO unique dimensional grain — rows
-can match on every visible field yet differ only in a hidden impression segment, and ~2%
-are byte-identical). So we never upsert: each run inserts a verbatim snapshot tagged with
-a `run_id` + `extracted_at`; downstream reads MAX(run_id). The `globoAds_runs` ledger
-records each run (refresh_log style) for monitoring.
+Date-partitioned, idempotent load. /digital/items has NO row-level key (Phase 0: rows can
+match on every visible field yet differ only in a hidden impression segment, ~2% are
+byte-identical), so we can't upsert per row. But `date` is a clean partition: each load
+DELETEs its [start..end] range then re-inserts, in one transaction. A retry or a Globo
+restatement of a recent day therefore replaces that day instead of duplicating it. The
+table is queried directly (full date-partitioned mirror); rows carry `run_id` +
+`extracted_at` for provenance and `globoAds_runs` is the refresh_log-style audit ledger.
 
 Scope (from probe.py): SECOM is Digital-only; only /digital/items carries value
 (demographic arrays empty, campaigns is just names, DAI empty).
@@ -17,11 +20,34 @@ Tables: airbyte_secom.globoAds_campaigns  +  airbyte_secom.globoAds_runs
 from __future__ import annotations
 
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from client import COD_CLIENT, mysql_conn, paginate
 
-DEFAULT_RANGE = ("2024-05-01", "2025-07-31")
+# The n8n job fires at 00:00 America/Sao_Paulo. A no-arg run gap-fills: it pulls from
+# the day after the last loaded date through yesterday (SP) — so a missed run is caught
+# up automatically. Override the window with: extract.py <start> <end>.
+SP_TZ = ZoneInfo("America/Sao_Paulo")
+FULL_BACKFILL_START = "2023-01-01"  # used only when the table is empty
+
+
+def gap_fill_range(con) -> tuple[str, str] | None:
+    """(start, end) to pull, or None if already current.
+
+    start = last loaded date + 1 (or FULL_BACKFILL_START if the table is empty);
+    end   = yesterday in Sao Paulo time.
+    """
+    from datetime import date
+
+    with con.cursor() as cur:
+        cur.execute("SELECT MAX(`date`) FROM globoAds_campaigns")
+        last = cur.fetchone()[0]
+    yesterday = datetime.now(SP_TZ).date() - timedelta(days=1)
+    start = (last + timedelta(days=1)) if last else date.fromisoformat(FULL_BACKFILL_START)
+    if start > yesterday:
+        return None
+    return start.isoformat(), yesterday.isoformat()
 
 # (column, MySQL type, caster) — ordered; drives both DDL and INSERT. Names preserved
 # from the API (incl. the `codCampaing` typo) per project convention.
@@ -96,17 +122,29 @@ def flatten(rec: dict) -> dict:
 
 
 def main():
-    start, end = (sys.argv[1], sys.argv[2]) if len(sys.argv) >= 3 else DEFAULT_RANGE
-    body = {"codClient": COD_CLIENT} if COD_CLIENT else {}
-    body |= {"startDate": start, "endDate": end}
-    started_at = datetime.now()
-
+    explicit = len(sys.argv) >= 3
     con = mysql_conn()
     run_id = None
     try:
-        with con.cursor() as cur:
+        with con.cursor() as cur:        # tables must exist before we read MAX(date)
             cur.execute(DDL_CAMPAIGNS)
             cur.execute(DDL_RUNS)
+        con.commit()
+
+        if explicit:
+            start, end = sys.argv[1], sys.argv[2]
+        else:
+            rng = gap_fill_range(con)
+            if rng is None:
+                print("already current — last loaded date is yesterday; nothing to pull")
+                return
+            start, end = rng
+
+        body = {"codClient": COD_CLIENT} if COD_CLIENT else {}
+        body |= {"startDate": start, "endDate": end}
+        started_at = datetime.now()
+
+        with con.cursor() as cur:
             cur.execute(
                 "INSERT INTO globoAds_runs (start_date, end_date, started_at, status)"
                 " VALUES (%s, %s, %s, 'RUNNING')", (start, end, started_at))
@@ -127,6 +165,12 @@ def main():
         collist = ", ".join(["run_id", "extracted_at"] + [f"`{c}`" for c in cols])
         ph = ", ".join(["%s"] * (len(cols) + 2))
         with con.cursor() as cur:
+            # Idempotent at the date partition: replace this range's rows so a retry
+            # (Execute Command retryOnFail) or a Globo restatement never duplicates a
+            # day. /digital/items has no row-level key, but `date` is a clean partition.
+            cur.execute("DELETE FROM globoAds_campaigns WHERE `date` BETWEEN %s AND %s",
+                        (start, end))
+            deleted = cur.rowcount
             cur.executemany(
                 f"INSERT INTO globoAds_campaigns ({collist}) VALUES ({ph})", values)
             cur.execute(
@@ -134,6 +178,7 @@ def main():
                 " status='SUCCESS' WHERE run_id=%s",
                 (datetime.now(), total, len(rows), run_id))
         con.commit()
+        print(f"  replaced {deleted} existing rows in [{start}..{end}]")
 
         ok = total is None or total == len(rows)
         print(f"  loaded {len(rows)} rows / totalElements {total}  "
