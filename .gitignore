@@ -7,3 +7,7 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+
+# Local data mirror + generated reports (contain SECOM data)
+*.db
+out/
