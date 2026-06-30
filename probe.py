@@ -20,7 +20,9 @@ PROBES = [
     ("TV Fechada · projects", "/paytv/projects", {}),
     ("Aud.Agregada · TV Aberta projetos", "/aggregated/audience/free-to-air/projects", {**DATES}),
     ("Aud.Agregada · TV Fechada projetos", "/aggregated/audience/pay-tv/projects", {**DATES}),
-    ("Globo Impacto · orders", "/globoimpact/orders", {}),
+    ("Globo Impacto · orders (freetoair)", "/globoimpact/orders", {"type": "freetoair"}),
+    ("Globo Impacto · orders (paytv)", "/globoimpact/orders", {"type": "paytv"}),
+    ("Globo Impacto · orders (multiplatform)", "/globoimpact/orders", {"type": "multiplatform"}),
 ]
 
 
