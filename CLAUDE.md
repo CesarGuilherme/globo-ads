@@ -7,7 +7,7 @@ Python 3.10+ client and **Airbyte source** for the Globo Ads Resultados API.
 Daily extraction is an Airbyte custom source, not the n8n `extract.py` job.
 
 - Connector: `airbyte-source-globo-ads/` (CDK 7, Python 3.11)
-- Image: `digitalbsb/source-globo-ads:0.1.0`
+- Image: `digitalbsb/source-globo-ads:0.1.1`
 - Streams: `digital_items` (incremental append, no PK), `digital_demographic` (full refresh)
 - Destination tables (connection prefix `globoads_air`):
   `globoads_air_digital_items`, `globoads_air_digital_demographic`

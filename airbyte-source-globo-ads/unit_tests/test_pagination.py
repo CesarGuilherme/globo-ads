@@ -60,7 +60,6 @@ def test_urljoin_keeps_api_v1_prefix():
         "https://api-ads-resultados.mybackstage.globo.com/api/v1/digital/items"
     )
     demo = DigitalDemographic(
-        items=stream,
         authenticator=BareTokenAuthenticator("tok"),
         cod_client=258469,
     )

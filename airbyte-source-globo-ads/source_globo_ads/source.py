@@ -43,7 +43,6 @@ class SourceGloboAds(AbstractSource):
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         items = self._items(config)
         demographic = DigitalDemographic(
-            items=items,
             authenticator=self._authenticator(config),
             cod_client=int(config["cod_client"]),
             page_size=config.get("page_size", DEFAULT_PAGE_SIZE),

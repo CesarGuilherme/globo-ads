@@ -68,17 +68,26 @@ class DigitalDemographic(GloboAdsStream):
     def __init__(
         self,
         *,
-        items: DigitalItems,
         demographic_lookback_days: int = DEFAULT_DEMOGRAPHIC_LOOKBACK_DAYS,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         **kwargs: Any,
     ):
         super().__init__(**kwargs)
-        self._items = items
         self._lookback_days = demographic_lookback_days
         self._configured_start_date = start_date or DEFAULT_START_DATE
         self._configured_end_date = end_date
+
+    def _candidate_items_stream(self) -> DigitalItems:
+        cutoff = (self._today() - timedelta(days=self._lookback_days)).strftime(DATE_FMT)
+        return DigitalItems(
+            authenticator=self._authenticator,
+            cod_client=self._cod_client,
+            page_size=self.page_size,
+            start_date=max(self._configured_start_date, cutoff),
+            end_date=self._configured_end_date,
+            lookback_window_days=0,
+        )
 
     def get_error_handler(self) -> HttpStatusErrorHandler:
         return DemographicErrorHandler(logger=logger)
@@ -93,14 +102,7 @@ class DigitalDemographic(GloboAdsStream):
         stream_state: Optional[Mapping[str, Any]] = None,
     ) -> Iterable[Optional[Mapping[str, Any]]]:
         cutoff = (self._today() - timedelta(days=self._lookback_days)).strftime(DATE_FMT)
-        probe = DigitalItems(
-            authenticator=self.authenticator,
-            cod_client=self._cod_client,
-            page_size=self.page_size,
-            start_date=max(self._configured_start_date, cutoff),
-            end_date=self._configured_end_date,
-            lookback_window_days=0,
-        )
+        probe = self._candidate_items_stream()
         rows: List[Mapping[str, Any]] = []
         for sl in probe.stream_slices(sync_mode=SyncMode.full_refresh):
             rows.extend(probe.read_records(sync_mode=SyncMode.full_refresh, stream_slice=sl))

@@ -6,8 +6,8 @@ Replaces the n8n Execute Command job (`extract.py` on `172.25.12.207`).
 
 ```bash
 cd airbyte-source-globo-ads
-docker build --platform linux/amd64 -t digitalbsb/source-globo-ads:0.1.0 .
-docker push digitalbsb/source-globo-ads:0.1.0
+docker build --platform linux/amd64 -t digitalbsb/source-globo-ads:0.1.1 .
+docker push digitalbsb/source-globo-ads:0.1.1
 ```
 
 Hub repo: **`digitalbsb/source-globo-ads`** (public). Docker Desktop is logged in as `digitalbsb`.
@@ -19,7 +19,7 @@ Mac `~/.kube/config` is empty — do not treat that as an outage.
 
 1. Settings → Sources → Add a new Docker connector
    - Repository: `digitalbsb/source-globo-ads`
-   - Tag: `0.1.0`
+   - Tag: `0.1.1`
 2. Create source with `api_token` + `cod_client` (258469). Optional: `start_date=2023-01-01`.
 3. Connection to MySQL `airbyte_secom`, prefix **`globoads_air`**, streams:
    - `digital_items` — incremental / append (not append_dedup)

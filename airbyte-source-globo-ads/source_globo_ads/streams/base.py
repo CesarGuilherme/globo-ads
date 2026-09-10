@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Optional
 from zoneinfo import ZoneInfo
 
 from airbyte_cdk.sources.streams.http import HttpStream
@@ -40,8 +40,18 @@ class GloboAdsStream(HttpStream):
     http_method = "POST"
     primary_key = None
 
-    def __init__(self, *, cod_client: int, page_size: int = DEFAULT_PAGE_SIZE, **kwargs: Any):
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        *,
+        cod_client: int,
+        page_size: int = DEFAULT_PAGE_SIZE,
+        authenticator: Optional[Any] = None,
+        **kwargs: Any,
+    ):
+        # CDK 7 HttpStream keeps the authenticator on HttpClient only — it never
+        # sets self.authenticator. Demographic needs a copy to probe /digital/items.
+        self._authenticator = authenticator
+        super().__init__(authenticator=authenticator, **kwargs)
         self._cod_client = cod_client
         self.page_size = page_size
 

@@ -39,11 +39,11 @@ opcionalmente `start_date`, `end_date`, `lookback_window_days`, `window_in_days`
 ## Build e publicação
 
 ```bash
-docker build --platform linux/amd64 -t digitalbsb/source-globo-ads:0.1.0 .
-docker run --rm digitalbsb/source-globo-ads:0.1.0 spec
-docker push digitalbsb/source-globo-ads:0.1.0
+docker build --platform linux/amd64 -t digitalbsb/source-globo-ads:0.1.1 .
+docker run --rm digitalbsb/source-globo-ads:0.1.1 spec
+docker push digitalbsb/source-globo-ads:0.1.1
 ```
 
 Import no Airbyte self-hosted: **Settings → Sources → New connector → Add a new Docker
-connector**, repositório `digitalbsb/source-globo-ads`, tag `0.1.0`. Prefix da
+connector**, repositório `digitalbsb/source-globo-ads`, tag `0.1.1`. Prefix da
 connection: `globoads_air`.

@@ -2,7 +2,7 @@ data:
   connectorSubtype: api
   connectorType: source
   definitionId: 7e2c4b91-6a0f-4d8a-9c3e-1b8f0a4e6d77
-  dockerImageTag: 0.1.0
+  dockerImageTag: 0.1.1
   dockerRepository: digitalbsb/source-globo-ads
   githubIssueLabel: source-globo-ads
   license: MIT

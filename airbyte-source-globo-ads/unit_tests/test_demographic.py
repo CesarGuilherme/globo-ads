@@ -1,4 +1,19 @@
-from source_globo_ads.streams.demographic import explode_demographic, select_demographic_candidates
+from source_globo_ads.auth import BareTokenAuthenticator
+from source_globo_ads.streams.demographic import (
+    DigitalDemographic,
+    explode_demographic,
+    select_demographic_candidates,
+)
+from source_globo_ads.streams.items import DigitalItems
+
+
+def test_candidate_items_stream_does_not_need_cdk_authenticator_attr():
+    """CDK 7 HttpStream never sets .authenticator; production died on AttributeError."""
+    auth = BareTokenAuthenticator("tok")
+    demo = DigitalDemographic(authenticator=auth, cod_client=258469)
+    assert not hasattr(demo, "authenticator")
+    probe = demo._candidate_items_stream()
+    assert isinstance(probe, DigitalItems)
 
 
 def test_select_skips_dai_a_and_campaigns_older_than_cutoff():
