@@ -1,13 +1,14 @@
-# Secrets — never commit credentials
 .env
 .env.*
-
-# Python
-__pycache__/
-*.py[cod]
 .venv/
 venv/
-
-# Local data mirror + generated reports (contain SECOM data)
+__pycache__/
+*.pyc
+.DS_Store
 *.db
 out/
+airbyte-source-globo-ads/.venv/
+airbyte-source-globo-ads/secrets/config.json
+airbyte-source-globo-ads/**/__pycache__/
+*.egg-info/
+.pytest_cache/

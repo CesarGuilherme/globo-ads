@@ -1,0 +1,77 @@
+{
+  "documentationUrl": "https://api-ads-resultados.mybackstage.globo.com",
+  "connectionSpecification": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Globo Ads Spec",
+    "type": "object",
+    "required": ["api_token", "cod_client"],
+    "additionalProperties": true,
+    "properties": {
+      "api_token": {
+        "type": "string",
+        "title": "API Token",
+        "description": "Platform-issued Globo Ads Resultados token. Sent as a bare Authorization header (no Bearer prefix).",
+        "airbyte_secret": true,
+        "order": 0
+      },
+      "cod_client": {
+        "type": "integer",
+        "title": "Client Code",
+        "description": "Globo Ads client code (codClient). SECOM is 258469.",
+        "examples": [258469],
+        "order": 1
+      },
+      "start_date": {
+        "type": "string",
+        "title": "Start Date",
+        "description": "Earliest date to pull /digital/items from, in YYYY-MM-DD. The API has no 90-day cap. Defaults to 2023-01-01.",
+        "format": "date",
+        "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+        "examples": ["2023-01-01"],
+        "order": 2
+      },
+      "end_date": {
+        "type": "string",
+        "title": "End Date",
+        "description": "Latest date to pull up to, in YYYY-MM-DD. Leave empty to sync up to yesterday America/Sao_Paulo. Never syncs today.",
+        "format": "date",
+        "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+        "examples": ["2026-12-31"],
+        "order": 3
+      },
+      "lookback_window_days": {
+        "type": "integer",
+        "title": "Lookback Window (days)",
+        "description": "Days before the stored cursor to re-read on every incremental run, so Globo restatements replace the trailing window. Destination must be append; silver keeps the latest _airbyte_extracted_at per date.",
+        "default": 7,
+        "minimum": 0,
+        "order": 4
+      },
+      "window_in_days": {
+        "type": "integer",
+        "title": "Request Window (days)",
+        "description": "Maximum number of days requested in one /digital/items POST. The API has no documented cap; 31 avoids gateway timeouts on historical backfill.",
+        "default": 31,
+        "minimum": 1,
+        "order": 5
+      },
+      "page_size": {
+        "type": "integer",
+        "title": "Page Size",
+        "description": "Spring page size for /digital/items. The extractor this connector replaces used 1000.",
+        "default": 1000,
+        "minimum": 1,
+        "maximum": 1000,
+        "order": 6
+      },
+      "demographic_lookback_days": {
+        "type": "integer",
+        "title": "Demographic Lookback (days)",
+        "description": "Only campaigns whose last /digital/items delivery is within this many days are queried for /digital/demographic. DAI-A is excluded regardless. Verified live window is ~190-220 days.",
+        "default": 190,
+        "minimum": 1,
+        "order": 7
+      }
+    }
+  }
+}

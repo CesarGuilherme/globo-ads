@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "startDate": { "type": ["null", "string"] },
+    "endDate": { "type": ["null", "string"] },
+    "project": { "type": ["null", "string"] },
+    "codCampaign": { "type": ["null", "string"] },
+    "campaign": { "type": ["null", "string"] },
+    "codClient": { "type": ["null", "number"] },
+    "nameClient": { "type": ["null", "string"] },
+    "codAgency": { "type": ["null", "number"] },
+    "nameAgency": { "type": ["null", "string"] },
+    "profileDomain": { "type": ["null", "string"] },
+    "codOrder": { "type": ["null", "string"] },
+    "label": { "type": ["null", "string"] },
+    "ctr": { "type": ["null", "number"] },
+    "impressions": { "type": ["null", "number"] },
+    "clicks": { "type": ["null", "number"] }
+  }
+}

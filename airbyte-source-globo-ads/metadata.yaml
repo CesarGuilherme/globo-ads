@@ -1,0 +1,19 @@
+data:
+  connectorSubtype: api
+  connectorType: source
+  definitionId: 7e2c4b91-6a0f-4d8a-9c3e-1b8f0a4e6d77
+  dockerImageTag: 0.1.0
+  dockerRepository: digitalbsb/source-globo-ads
+  githubIssueLabel: source-globo-ads
+  license: MIT
+  name: Globo Ads
+  releaseStage: alpha
+  supportLevel: community
+  connectorBuildOptions:
+    baseImage: docker.io/airbyte/python-connector-base:4.0.2@sha256:9fdb1888c4264cf6fee473649ecb593f56f58e5d0096a87ee0b231777e2e3e73
+  tags:
+    - language:python
+  ab_internal:
+    sl: 0
+    ql: 100
+metadataSpecVersion: "1.0"

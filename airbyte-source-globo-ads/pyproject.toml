@@ -1,0 +1,23 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+version = "0.1.0"
+name = "source-globo-ads"
+description = "Source implementation for Globo Ads Resultados API."
+authors = ["Secom <cesarguilherme@gmail.com>"]
+readme = "README.md"
+packages = [{ include = "source_globo_ads" }]
+
+[tool.poetry.dependencies]
+python = "^3.11,<3.12"
+airbyte-cdk = "^7.28.2"
+
+[tool.poetry.scripts]
+source-globo-ads = "source_globo_ads.run:run"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+requests-mock = "^1.9.3"
+pytest-mock = "^3.6"
