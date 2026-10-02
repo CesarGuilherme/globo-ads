@@ -12,3 +12,4 @@ airbyte-source-globo-ads/secrets/config.json
 airbyte-source-globo-ads/**/__pycache__/
 *.egg-info/
 .pytest_cache/
+CLAUDE.md
